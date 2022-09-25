@@ -1,27 +1,33 @@
 import React, { useState } from "react";
 import { StyleSheet, View, SafeAreaView, ScrollView } from "react-native";
-import Toast from "react-native-root-toast";
 import { Text, Button, Input, Divider } from "@rneui/themed";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import Toast from "react-native-root-toast";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 
-const LoginScreen = ({ navigation }) => {
+const RegisterScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
+  const handleSignUp = () => {
     if (validateData()) {
-      signInWithEmailAndPassword(auth, email, password)
+      createUserWithEmailAndPassword(auth, email, password)
         .then((userCredentials) => {
-          console.log("userCredentials", userCredentials);
-          navigation.navigate("Home");
+          const user = userCredentials.user;
+          console.log("Registered in with:", user);
         })
         .catch((error) => alert(error.message));
     }
   };
 
   const validateData = () => {
-    if (!email) {
+    if (!name) {
+      Toast.show("Name is reqiured", {
+        duration: Toast.durations.SHORT,
+      });
+      return false;
+    } else if (!email) {
       Toast.show("Email is reqiured", {
         duration: Toast.durations.SHORT,
       });
@@ -39,9 +45,20 @@ const LoginScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.screenContainer}>
         <View style={styles.titleContainer}>
-          <Text h2>Login to your Account</Text>
+          <Text h2>Create new account</Text>
         </View>
         <View style={styles.inputContainer}>
+          <Input
+            placeholder="Name"
+            onChangeText={(value) => setName(value)}
+            inputContainerStyle={{
+              paddingHorizontal: 10,
+              paddingVertical: 10,
+              borderRadius: 10,
+              borderWidth: 1,
+            }}
+            // errorMessage={!name && "name required"}
+          />
           <Input
             placeholder="Email"
             leftIcon={{ type: "material-community", name: "email" }}
@@ -52,6 +69,7 @@ const LoginScreen = ({ navigation }) => {
               borderRadius: 10,
               borderWidth: 1,
             }}
+            // errorMessage={!email && "email required"}
           />
           <Input
             placeholder="Password"
@@ -63,9 +81,10 @@ const LoginScreen = ({ navigation }) => {
               borderRadius: 10,
               borderWidth: 1,
             }}
+            // errorMessage={!password && "password required"}
           />
           <Button
-            title="Sign in"
+            title="Sign up"
             buttonStyle={{
               backgroundColor: "#584CF4",
               borderWidth: 2,
@@ -78,24 +97,18 @@ const LoginScreen = ({ navigation }) => {
 
               marginVertical: 10,
             }}
+            onPress={handleSignUp}
             titleStyle={{ fontWeight: "bold" }}
-            onPress={handleLogin}
           />
         </View>
-        <Button
-          title="Forgot Password?"
-          type="clear"
-          titleStyle={{ fontSize: 14 }}
-          onPress={() => navigation.navigate("Register")}
-        />
         <Divider />
         <View style={styles.signUpButtonContainer}>
-          <Text h6>Don't have an account?</Text>
+          <Text h6>Already have an account?</Text>
           <Button
-            title="Sign up"
+            title="Sign in"
             type="clear"
             titleStyle={{ fontSize: 14 }}
-            onPress={() => navigation.navigate("Register")}
+            onPress={() => navigation.navigate("Login")}
           />
         </View>
       </ScrollView>
@@ -103,7 +116,7 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
-export default LoginScreen;
+export default RegisterScreen;
 
 const styles = StyleSheet.create({
   safeArea: {

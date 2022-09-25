@@ -1,24 +1,33 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Text, Button } from "@rneui/themed";
+import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
-
 const HomeScreen = () => {
-  //   const navigation = useNavigation();
-
   const handleSignOut = () => {
-    auth
-      .SignOut()
-      .then(() => {
-        // navigation.replace("Login");
-      })
-      .catch((error) => alert(error.message));
+    signOut(auth).catch((error) => alert(error.message));
   };
   return (
     <View style={styles.container}>
-      <Text>Email: {auth.currentUser?.email}</Text>
-      <TouchableOpacity onPress={handleSignOut} style={styles.button}>
-        <Text style={styles.buttonText}>Sign Out</Text>
-      </TouchableOpacity>
+      {/* <Text>Email: {auth.currentUser?.email}</Text> */}
+      <Text h2>Home Screen</Text>
+      <Button
+        title="Sign out"
+        buttonStyle={{
+          backgroundColor: "#584CF4",
+          borderWidth: 2,
+          borderColor: "white",
+          height: 58,
+          borderRadius: 30,
+        }}
+        containerStyle={{
+          marginHorizontal: 50,
+
+          marginVertical: 10,
+        }}
+        titleStyle={{ fontWeight: "bold" }}
+        onPress={handleSignOut}
+      />
     </View>
   );
 };
@@ -30,20 +39,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-
-  button: {
-    backgroundColor: "#0782F9",
-    width: "60%",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginStart: 40,
-  },
-
-  buttonText: {
-    color: "white",
-    fontWeight: "700",
-    fontSize: 16,
   },
 });
