@@ -8,15 +8,20 @@ import { auth } from "../firebase";
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = () => {
     if (validateData()) {
+      setIsLoading(true);
       signInWithEmailAndPassword(auth, email, password)
         .then((userCredentials) => {
-          console.log("userCredentials", userCredentials);
-          navigation.navigate("Home");
+          // console.log("userCredentials", userCredentials);
+          setIsLoading(false);
         })
-        .catch((error) => alert(error.message));
+        .catch((error) => {
+          setIsLoading(false);
+          alert(error.message);
+        });
     }
   };
 
@@ -46,6 +51,7 @@ const LoginScreen = ({ navigation }) => {
             placeholder="Email"
             leftIcon={{ type: "material-community", name: "email" }}
             onChangeText={(value) => setEmail(value)}
+            autoCapitalize={"none"}
             inputContainerStyle={{
               paddingHorizontal: 10,
               paddingVertical: 10,
@@ -56,6 +62,7 @@ const LoginScreen = ({ navigation }) => {
           <Input
             placeholder="Password"
             onChangeText={(value) => setPassword(value)}
+            autoCapitalize={"none"}
             secureTextEntry={true}
             inputContainerStyle={{
               paddingHorizontal: 10,
@@ -73,6 +80,7 @@ const LoginScreen = ({ navigation }) => {
               height: 58,
               borderRadius: 30,
             }}
+            loading={isLoading}
             containerStyle={{
               marginHorizontal: 50,
 

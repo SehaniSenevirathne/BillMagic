@@ -3,22 +3,38 @@ import { StyleSheet, View, SafeAreaView, ScrollView } from "react-native";
 import { Text, Button, Input, Divider } from "@rneui/themed";
 import Toast from "react-native-root-toast";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { setDoc, doc, collection } from "firebase/firestore";
+import { auth, firestore } from "../firebase";
 
 const RegisterScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSignUp = () => {
     if (validateData()) {
+      setIsLoading(true);
       createUserWithEmailAndPassword(auth, email, password)
         .then((userCredentials) => {
-          const user = userCredentials.user;
-          console.log("Registered in with:", user);
+          const user = {
+            name: name,
+            email: userCredentials.user.email,
+            uid: userCredentials.user.uid,
+          };
+          saveUser(user);
+          setIsLoading(false);
         })
-        .catch((error) => alert(error.message));
+        .catch((error) => {
+          setIsLoading(false);
+          alert(error.message);
+        });
     }
+  };
+
+  const saveUser = async (user) => {
+    const userRef = collection(firestore, "users");
+    await setDoc(doc(userRef, user.uid), user);
   };
 
   const validateData = () => {
@@ -51,6 +67,7 @@ const RegisterScreen = ({ navigation }) => {
           <Input
             placeholder="Name"
             onChangeText={(value) => setName(value)}
+            autoCapitalize={"none"}
             inputContainerStyle={{
               paddingHorizontal: 10,
               paddingVertical: 10,
@@ -63,6 +80,7 @@ const RegisterScreen = ({ navigation }) => {
             placeholder="Email"
             leftIcon={{ type: "material-community", name: "email" }}
             onChangeText={(value) => setEmail(value)}
+            autoCapitalize={"none"}
             inputContainerStyle={{
               paddingHorizontal: 10,
               paddingVertical: 10,
@@ -74,6 +92,7 @@ const RegisterScreen = ({ navigation }) => {
           <Input
             placeholder="Password"
             onChangeText={(value) => setPassword(value)}
+            autoCapitalize={"none"}
             secureTextEntry={true}
             inputContainerStyle={{
               paddingHorizontal: 10,
@@ -97,6 +116,7 @@ const RegisterScreen = ({ navigation }) => {
 
               marginVertical: 10,
             }}
+            loading={isLoading}
             onPress={handleSignUp}
             titleStyle={{ fontWeight: "bold" }}
           />
