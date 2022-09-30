@@ -15,7 +15,6 @@ const LoginScreen = ({ navigation }) => {
       setIsLoading(true);
       signInWithEmailAndPassword(auth, email, password)
         .then((userCredentials) => {
-          // console.log("userCredentials", userCredentials);
           setIsLoading(false);
         })
         .catch((error) => {

@@ -11,38 +11,75 @@ import {
   ListItem,
   Skeleton,
   ButtonGroup,
+  Avatar,
+  CheckBox,
+  Icon,
 } from "@rneui/themed";
 import { onAuthStateChanged } from "firebase/auth";
-import { setDoc, getDocs, doc, collection } from "firebase/firestore";
+import {
+  setDoc,
+  getDoc,
+  getDocs,
+  doc,
+  collection,
+  where,
+  query,
+} from "firebase/firestore";
 import { auth, firestore } from "../firebase";
 import groupsEmpty from "../assets/groups-empty.png";
 
 const GroupScreen = () => {
   const [user, setUser] = useState(null);
-  const [groupName, setGroupName] = useState("");
-  const [selectedIndex, setSelectedIndex] = useState(0);
+
   const [isVisible, setIsVisible] = useState(false);
+  const [isVisibleAddUser, setIsVisibleAddUser] = useState(false);
+
+  //group data
+  const [groupName, setGroupName] = useState("");
+  const [colorIndex, setColorIndex] = useState(0);
+
   const [isLoading, setIsLoading] = useState(true);
+  const [refresh, setRefresh] = useState(false);
   const [groupList, setGroupList] = useState([]);
+  const [userList, setUserList] = useState([]);
 
   const toggleDialog = () => {
     setIsVisible(!isVisible);
   };
 
+  const toggleUserDialog = () => {
+    setIsVisibleAddUser(!isVisibleAddUser);
+  };
+
   const handleCreateGroup = () => {
+    let group_members = userList.filter((item) => item.selected);
     if (validateData()) {
       setIsLoading(true);
-      const data = { group_name: groupName, user_id: user.uid };
+      const data = {
+        group_name: groupName,
+        user_id: user.uid,
+        color_index: colorIndex,
+        group_members: group_members.map((item) => ({ uid: item.uid })),
+      };
       saveGroup(data);
+    }
+  };
+
+  const handleNextBtn = () => {
+    if (validateData()) {
+      setIsVisible(!isVisible);
+      setIsVisibleAddUser(!isVisibleAddUser);
     }
   };
 
   const saveGroup = async (data) => {
     const groupRef = collection(firestore, "groups");
     await setDoc(doc(groupRef), data);
-    setIsVisible(false);
+    setIsVisibleAddUser(false);
+    setColorIndex(0);
     setGroupName("");
-    fetchGroups();
+    fetchGroups(user);
+    fetchUserList(user);
   };
 
   const validateData = () => {
@@ -58,10 +95,9 @@ const GroupScreen = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // User is signed in, see docs for a list of available properties
-        // https://firebase.google.com/docs/reference/js/firebase.User
-        setUser(user);
-        fetchGroups();
+        fetchUserData(user);
+        fetchGroups(user);
+        fetchUserList(user);
       } else {
         // User is signed out
       }
@@ -69,9 +105,13 @@ const GroupScreen = () => {
     return unsubscribe;
   }, []);
 
-  const fetchGroups = async () => {
+  const fetchGroups = async (user) => {
     const list = [];
-    const querySnapshot = await getDocs(collection(firestore, "groups"));
+    const groupQuery = query(
+      collection(firestore, "groups"),
+      where("user_id", "==", user.uid)
+    );
+    const querySnapshot = await getDocs(groupQuery);
     querySnapshot.forEach((doc) => {
       list.push({ id: doc.id, ...doc.data() });
     });
@@ -79,17 +119,95 @@ const GroupScreen = () => {
     setIsLoading(false);
   };
 
+  const fetchUserData = async (user) => {
+    const docRef = doc(firestore, "users", user.uid);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      setUser(docSnap.data());
+    } else {
+      console.log("No such document!");
+    }
+  };
+
+  const fetchUserList = async (user) => {
+    const list = [];
+    const usersQuery = query(
+      collection(firestore, "users"),
+      where("uid", "!=", user.uid)
+    );
+    const querySnapshot = await getDocs(usersQuery);
+    querySnapshot.forEach((doc) => {
+      list.push({ id: doc.id, ...doc.data() });
+    });
+    setUserList(list);
+  };
+
   const renderItem = ({ item }) => {
     return (
       <ListItem key={item.id} bottomDivider>
+        <Avatar
+          rounded
+          icon={{ name: "users", type: "feather" }}
+          containerStyle={{
+            backgroundColor:
+              item.color_index == 0
+                ? "red"
+                : item.color_index == 1
+                ? "green"
+                : "blue",
+          }}
+        />
         <ListItem.Content>
           <ListItem.Title>{item.group_name}</ListItem.Title>
-          <ListItem.Subtitle>{""}</ListItem.Subtitle>
+          <ListItem.Subtitle>
+            memebers - {item.group_members && item.group_members.length}
+          </ListItem.Subtitle>
         </ListItem.Content>
       </ListItem>
     );
   };
 
+  const handleSelectGroupMemeber = (uid) => {
+    const list = userList;
+    const selectedItem = list.findIndex((user) => user.uid === uid);
+    if (list[selectedItem].selected) {
+      list[selectedItem].selected = false;
+    } else {
+      list[selectedItem].selected = true;
+    }
+    setUserList(list);
+    setRefresh(!refresh);
+  };
+
+  const renderUserItem = ({ item }) => {
+    return (
+      <ListItem key={item.id} bottomDivider>
+        <CheckBox
+          checkedIcon={
+            <Icon
+              name="radio-button-checked"
+              type="material"
+              color="green"
+              size={20}
+            />
+          }
+          uncheckedIcon={
+            <Icon
+              name="radio-button-unchecked"
+              type="material"
+              color="grey"
+              size={20}
+            />
+          }
+          containerStyle={{ padding: 0 }}
+          checked={item.selected}
+          onPress={() => handleSelectGroupMemeber(item.uid)}
+        />
+        <Avatar rounded containerStyle={{ backgroundColor: "orange" }} />
+        <ListItem.Title>{item.name}</ListItem.Title>
+      </ListItem>
+    );
+  };
   const groupSkeleton = () => {
     return (
       <View style={styles.groupSkeletonContainer}>
@@ -106,11 +224,15 @@ const GroupScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       {!isLoading && groupList.length > 0 ? (
-        <FlatList
-          data={groupList}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-        />
+        <View style={styles.listContainer}>
+          <Text h4>User Groups</Text>
+          <FlatList
+            data={groupList}
+            extraData={refresh}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+          />
+        </View>
       ) : !isLoading && groupList.length == 0 ? (
         <View style={styles.container}>
           <Image
@@ -145,15 +267,30 @@ const GroupScreen = () => {
         <Text style={styles.subTitleTextStyle}>Select Group Color</Text>
         <ButtonGroup
           buttons={["Red", "Green", "Blue"]}
-          selectedIndex={selectedIndex}
+          selectedIndex={colorIndex}
           onPress={(value) => {
-            console.log("value", value);
-            setSelectedIndex(value);
+            setColorIndex(value);
           }}
           containerStyle={{ marginBottom: 20 }}
         />
         <Button
           title="Next"
+          type="outline"
+          loading={isLoading}
+          titleStyle={{ fontSize: 14 }}
+          onPress={handleNextBtn}
+        />
+      </Dialog>
+      <Dialog isVisible={isVisibleAddUser} onBackdropPress={toggleUserDialog}>
+        <Dialog.Title title="Create new group" />
+        <Text style={styles.subTitleTextStyle}>Select group members</Text>
+        <FlatList
+          data={userList}
+          renderItem={renderUserItem}
+          keyExtractor={(item) => item.id}
+        />
+        <Button
+          title="Ok"
           type="outline"
           loading={isLoading}
           titleStyle={{ fontSize: 14 }}
@@ -175,6 +312,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     marginHorizontal: 16,
+    padding: 16,
+  },
+  listContainer: {
+    flex: 1,
+    // marginHorizontal: 16,
     padding: 16,
   },
   subTitleTextStyle: {

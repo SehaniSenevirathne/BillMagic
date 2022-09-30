@@ -74,7 +74,6 @@ const RegisterScreen = ({ navigation }) => {
               borderRadius: 10,
               borderWidth: 1,
             }}
-            // errorMessage={!name && "name required"}
           />
           <Input
             placeholder="Email"
@@ -87,7 +86,6 @@ const RegisterScreen = ({ navigation }) => {
               borderRadius: 10,
               borderWidth: 1,
             }}
-            // errorMessage={!email && "email required"}
           />
           <Input
             placeholder="Password"
@@ -100,7 +98,6 @@ const RegisterScreen = ({ navigation }) => {
               borderRadius: 10,
               borderWidth: 1,
             }}
-            // errorMessage={!password && "password required"}
           />
           <Button
             title="Sign up"

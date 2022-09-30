@@ -13,9 +13,6 @@ const ProfileScreen = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // User is signed in, see docs for a list of available properties
-        // https://firebase.google.com/docs/reference/js/firebase.User
-
         getUserData(user);
       } else {
         // User is signed out
@@ -32,7 +29,6 @@ const ProfileScreen = () => {
       setName(docSnap.data().name);
       setIsLoading(false);
     } else {
-      // doc.data() will be undefined in this case
       console.log("No such document!");
     }
   };
@@ -95,7 +91,6 @@ const ProfileScreen = () => {
               placeholder="Name"
               onChangeText={(value) => setName(value)}
               inputContainerStyle={styles.inputContainerStyle}
-              // errorMessage={!name && "name required"}
             />
             <Input
               value={email}
@@ -103,7 +98,6 @@ const ProfileScreen = () => {
               leftIcon={{ type: "material-community", name: "email" }}
               onChangeText={(value) => setEmail(value)}
               inputContainerStyle={styles.inputContainerStyle}
-              // errorMessage={!email && "email required"}
             />
             <Button
               title="Update profile"
