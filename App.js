@@ -12,6 +12,7 @@ import LoginScreen from "./Screens/LoginScreen";
 import HomeScreen from "./Screens/HomeScreen";
 import RegisterScreen from "./Screens/RegisterScreen";
 import GroupScreen from "./Screens/GroupScreen";
+import GroupViewScreen from "./Screens/GroupViewScreen";
 import ProfileScreen from "./Screens/ProfileScreen";
 
 const Stack = createNativeStackNavigator();
@@ -23,8 +24,7 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // User is signed in, see docs for a list of available properties
-        // https://firebase.google.com/docs/reference/js/firebase.User
+        
         setUser(user);
       } else {
         // User is signed out
@@ -34,6 +34,23 @@ export default function App() {
     });
     return unsubscribe;
   }, []);
+
+  const GroupStack = () => {
+    return (
+      <Stack.Navigator>
+        <Stack.Screen
+          options={{ headerShown: false }}
+          name="Groups"
+          component={GroupScreen}
+        />
+        <Stack.Screen
+          options={{ headerShown: false }}
+          name="GroupViewScreen"
+          component={GroupViewScreen}
+        />
+      </Stack.Navigator>
+    );
+  };
 
   return (
     <RootSiblingParent>
@@ -64,7 +81,7 @@ export default function App() {
             />
             <Tab.Screen
               name="Group"
-              component={GroupScreen}
+              component={GroupStack}
               options={{
                 tabBarIcon: () => (
                   <MaterialCommunityIcons name="card-multiple" size={30} />

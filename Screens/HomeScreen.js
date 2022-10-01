@@ -175,6 +175,13 @@ const HomeScreen = () => {
   };
 
   const renderItem = ({ item }) => {
+    let group = null;
+    if (item.assign_group) {
+      console.log("item.assign_group", item.assign_group);
+      console.log("groupList", groupList);
+      group = groupList.find((group) => group.id == item.assign_group);
+      console.log("group", group);
+    }
     return (
       <ListItem.Swipeable
         key={item.id}
@@ -199,8 +206,22 @@ const HomeScreen = () => {
         />
         <ListItem.Content>
           <ListItem.Title>{item.exp_name}</ListItem.Title>
-          <ListItem.Title>Rs. {item.amount}</ListItem.Title>
+          {group && group.group_name ? (
+            <ListItem.Title
+              style={{
+                color:
+                  group.color_index == 0
+                    ? "red"
+                    : group.color_index == 1
+                    ? "green"
+                    : "blue",
+              }}
+            >
+              {group.group_name}
+            </ListItem.Title>
+          ) : null}
         </ListItem.Content>
+        <ListItem.Title>Rs. {item.amount}</ListItem.Title>
       </ListItem.Swipeable>
     );
   };

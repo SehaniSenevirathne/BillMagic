@@ -28,7 +28,7 @@ import {
 import { auth, firestore } from "../firebase";
 import groupsEmpty from "../assets/groups-empty.png";
 
-const GroupScreen = () => {
+const GroupScreen = ({ navigator }) => {
   const [user, setUser] = useState(null);
 
   const [isVisible, setIsVisible] = useState(false);
@@ -262,7 +262,7 @@ const GroupScreen = () => {
           placeholder="Group Name"
           onChangeText={(value) => setGroupName(value)}
           inputContainerStyle={styles.inputContainerStyle}
-          // errorMessage={!name && "name required"}
+         
         />
         <Text style={styles.subTitleTextStyle}>Select Group Color</Text>
         <ButtonGroup
